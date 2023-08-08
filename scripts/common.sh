@@ -36,12 +36,24 @@ EOF
 
 sudo sysctl --system
 
+#Installing containerd
+wget https://github.com/containerd/containerd/releases/download/v1.7.3/containerd-1.7.3-linux-amd64.tar.gz
+sudo tar Cxzvf /usr/local containerd-1.7.3-linux-amd64.tar.gz
+rm containerd-1.7.3-linux-amd64.tar.gz
 
-sudo apt-get update
-sudo apt-get install containerd -y
-
+sudo wget -O /etc/systemd/system/containerd.service https://raw.githubusercontent.com/containerd/containerd/main/containerd.service 
 sudo systemctl daemon-reload
 sudo systemctl enable containerd --now
+
+#Installing runc
+wget https://github.com/opencontainers/runc/releases/download/v1.1.8/runc.amd64
+sudo install -m 755 runc.amd64 /usr/local/sbin/runc
+
+
+#Installing CNI plugins
+wget https://github.com/containernetworking/plugins/releases/download/v1.3.0/cni-plugins-linux-amd64-v1.3.0.tgz
+sudo mkdir -p /opt/cni/bin
+sudo tar Cxzvf /opt/cni/bin cni-plugins-linux-amd64-v1.3.0.tgz
 
 echo "CRI runtime installed susccessfully"
 
@@ -54,10 +66,4 @@ sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://dl.k
 echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
 sudo apt-get update -y
 sudo apt-get install -y kubelet="$KUBERNETES_VERSION" kubectl="$KUBERNETES_VERSION" kubeadm="$KUBERNETES_VERSION"
-sudo apt-get update -y
-sudo apt-get install -y jq
 
-local_ip="$(ip --json a s | jq -r '.[] | if .ifname == "ens160" then .addr_info[] | if .family == "inet" then .local else empty end else empty end')"
-cat > /etc/default/kubelet << EOF
-KUBELET_EXTRA_ARGS=--node-ip=$local_ip
-EOF
