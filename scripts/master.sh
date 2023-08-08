@@ -39,6 +39,4 @@ sudo chown "$(id -u)":"$(id -g)" "$HOME"/.kube/config
 
 # Install Claico Network Plugin Network 
 
-curl https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/calico.yaml -O
-
-kubectl apply -f calico.yaml
+kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml 
