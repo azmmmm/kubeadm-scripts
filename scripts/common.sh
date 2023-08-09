@@ -36,30 +36,26 @@ EOF
 
 sudo sysctl --system
 
-#Installing containerd
-wget https://github.com/containerd/containerd/releases/download/v1.7.3/containerd-1.7.3-linux-amd64.tar.gz
-sudo tar Cxzvf /usr/local containerd-1.7.3-linux-amd64.tar.gz
-rm containerd-1.7.3-linux-amd64.tar.gz
+#Installing cri
+OS="xUbuntu_22.04"
+VERSION="1.24"
+echo "deb [signed-by=/usr/share/keyrings/libcontainers-archive-keyring.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$OS/ /" > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
+echo "deb [signed-by=/usr/share/keyrings/libcontainers-crio-archive-keyring.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/$VERSION/$OS/ /" > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:$VERSION.list
 
-sudo wget -O /etc/systemd/system/containerd.service https://raw.githubusercontent.com/containerd/containerd/main/containerd.service 
+mkdir -p /usr/share/keyrings
+curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$OS/Release.key | gpg --dearmor -o /usr/share/keyrings/libcontainers-archive-keyring.gpg
+curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/$VERSION/$OS/Release.key | gpg --dearmor -o /usr/share/keyrings/libcontainers-crio-archive-keyring.gpg
+
+apt-get update
+apt-get install cri-o cri-o-runc -y
+
+
 sudo systemctl daemon-reload
-sudo systemctl enable containerd --now
-
-#Installing runc
-wget https://github.com/opencontainers/runc/releases/download/v1.1.8/runc.amd64
-sudo install -m 755 runc.amd64 /usr/local/sbin/runc
-
-
-#Installing CNI plugins
-wget https://github.com/containernetworking/plugins/releases/download/v1.3.0/cni-plugins-linux-amd64-v1.3.0.tgz
-sudo mkdir -p /opt/cni/bin
-sudo tar Cxzvf /opt/cni/bin cni-plugins-linux-amd64-v1.3.0.tgz
-
-echo "CRI runtime installed susccessfully"
+sudo systemctl enable crio --now
 
 # Install kubelet, kubectl and Kubeadm
 
-sudo apt-get update -y
+sudo apt-get update
 sudo apt-get install -y apt-transport-https ca-certificates curl
 sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://dl.k8s.io/apt/doc/apt-key.gpg
 
